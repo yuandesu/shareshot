@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowEcsTaskRole",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::659775407889:role/shareshot-task-role"
+      },
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::shareshot-tse-sandbox",
+        "arn:aws:s3:::shareshot-tse-sandbox/*"
+      ]
+    }
+  ]
+}

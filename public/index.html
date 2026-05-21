@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShareShot</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+    "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  background: #f8fafc; color: #1e293b; min-height: 100vh;
+}
+header {
+  background: #fff; border-bottom: 1px solid #e2e8f0;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-inner {
+  max-width: 1100px; margin: 0 auto; padding: 0 28px;
+  height: 58px; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px;
+}
+.logo {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 700; font-size: 17px; color: #1e293b;
+  text-decoration: none; flex-shrink: 0;
+}
+.logo-icon {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.header-right { display: flex; align-items: center; gap: 8px; }
+.lang-wrap { position: relative; }
+.btn-lang {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 12px; height: 32px; background: transparent;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  font-size: 12px; font-weight: 600; color: #64748b;
+  cursor: pointer; font-family: inherit; transition: all 0.12s;
+  flex-shrink: 0; user-select: none;
+}
+.btn-lang:hover { background: #f8fafc; border-color: #cbd5e1; color: #374151; }
+.btn-lang svg { transition: transform 0.15s; }
+.btn-lang.open svg { transform: rotate(180deg); }
+.lang-dropdown {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.1); overflow: hidden;
+  min-width: 130px; z-index: 999; display: none;
+}
+.lang-dropdown.open { display: block; }
+.lang-option {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; font-size: 13px; font-weight: 500; color: #374151;
+  cursor: pointer; transition: background 0.1s; gap: 12px;
+}
+.lang-option:hover { background: #f8fafc; }
+.lang-option.active { color: #6366f1; font-weight: 600; }
+.lang-option .check { opacity: 0; color: #6366f1; }
+.lang-option.active .check { opacity: 1; }
+.btn-new {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 18px; height: 38px; background: #6366f1;
+  color: #fff; border: none; border-radius: 9px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 1px 3px rgba(99,102,241,0.3);
+  font-family: inherit; white-space: nowrap;
+}
+.btn-new:hover { background: #4f46e5; box-shadow: 0 4px 12px rgba(99,102,241,0.35); }
+.btn-new:active { transform: translateY(1px); }
+main { max-width: 1100px; margin: 0 auto; padding: 40px 28px 80px; }
+.page-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+.page-sub { font-size: 14px; color: #64748b; margin-bottom: 32px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+.project-card {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+  overflow: hidden; cursor: pointer; text-decoration: none; color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; display: block;
+}
+.project-card:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.1);
+  transform: translateY(-2px);
+}
+.card-thumb {
+  width: 100%; aspect-ratio: 16/10; background: #f1f5f9;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; border-bottom: 1px solid #f1f5f9; position: relative;
+}
+.card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card-thumb-placeholder { color: #cbd5e1; font-size: 32px; }
+.card-body { padding: 14px 16px 16px; }
+.card-name {
+  font-size: 14px; font-weight: 600; color: #0f172a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;
+}
+.card-meta { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
+.card-dot { width: 3px; height: 3px; background: #cbd5e1; border-radius: 50%; }
+.card-actions { position: absolute; top: 8px; right: 8px; display: none; gap: 4px; }
+.project-card:hover .card-actions { display: flex; }
+.card-action-btn {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.92); border: 1px solid #e2e8f0;
+  border-radius: 7px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; backdrop-filter: blur(4px); color: #64748b;
+}
+.card-action-btn:hover { background: #fff; color: #ef4444; border-color: #fecaca; }
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 80px 24px; color: #94a3b8; }
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; }
+.empty-title { font-size: 18px; font-weight: 600; color: #64748b; margin-bottom: 8px; }
+.empty-sub { font-size: 14px; color: #94a3b8; margin-bottom: 28px; }
+.loading-grid { grid-column: 1 / -1; display: flex; justify-content: center; padding: 80px; }
+.spinner {
+  width: 24px; height: 24px; border: 2px solid #e2e8f0;
+  border-top-color: #6366f1; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.4);
+  backdrop-filter: blur(3px); display: flex; align-items: center;
+  justify-content: center; z-index: 500;
+}
+.overlay.hidden { display: none; }
+.modal {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+  padding: 28px 28px 24px; width: 400px; max-width: 92vw;
+  box-shadow: 0 20px 60px rgba(15,23,42,0.15);
+}
+.modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 6px; color: #0f172a; }
+.modal p { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+.modal label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+.modal input[type="text"] {
+  width: 100%; padding: 10px 14px; background: #f8fafc;
+  border: 1.5px solid #e2e8f0; border-radius: 9px; font-size: 14px;
+  font-family: inherit; color: #0f172a; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s; margin-bottom: 20px;
+}
+.modal input[type="text"]:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-cancel {
+  padding: 9px 18px; border-radius: 9px; background: transparent;
+  border: 1px solid #e2e8f0; color: #64748b; font-size: 14px;
+  font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.12s;
+}
+.btn-cancel:hover { background: #f8fafc; color: #374151; }
+.btn-create {
+  padding: 9px 20px; border-radius: 9px; background: #6366f1; border: none;
+  color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all 0.15s; box-shadow: 0 1px 3px rgba(99,102,241,0.3);
+}
+.btn-create:hover { background: #4f46e5; }
+.btn-create:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/">
+      <div class="logo-icon">📸</div>
+      ShareShot
+    </a>
+    <div class="header-right">
+      <div class="lang-wrap">
+        <button class="btn-lang" id="langBtn">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6.5" cy="6.5" r="5"/><path d="M6.5 1.5c-1.5 2-1.5 8 0 10M6.5 1.5c1.5 2 1.5 8 0 10M1.5 6.5h10"/>
+          </svg>
+          Language
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="2,3.5 5,6.5 8,3.5"/></svg>
+        </button>
+        <div class="lang-dropdown" id="langDropdown">
+          <div class="lang-option" data-lang="en"><span>English</span><span class="check">✓</span></div>
+          <div class="lang-option" data-lang="ja"><span>日本語</span><span class="check">✓</span></div>
+        </div>
+      </div>
+      <button class="btn-new" id="newBtn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/>
+        </svg>
+        <span data-i18n="newProject">New Project</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="page-title" data-i18n="pageTitle">Projects</div>
+  <div class="page-sub" data-i18n="pageSub">Upload screenshots, annotate, and share with your team</div>
+  <div class="grid" id="grid">
+    <div class="loading-grid"><div class="spinner"></div></div>
+  </div>
+</main>
+
+<div class="overlay hidden" id="newModal">
+  <div class="modal">
+    <h2 data-i18n="modalTitle">New Project</h2>
+    <p data-i18n="modalSub">Enter a project name. It will also appear on the shared link.</p>
+    <label for="projName" data-i18n="labelName">Project name</label>
+    <input type="text" id="projName" data-i18n-placeholder="namePlaceholder"
+      placeholder="e.g. APM Error Investigation" maxlength="80" autocomplete="off">
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelBtn" data-i18n="cancel">Cancel</button>
+      <button class="btn-create" id="createBtn" data-i18n="createOpen">Create &amp; Open</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const STRINGS = {
+  en: {
+    newProject:'New Project', pageTitle:'Projects',
+    pageSub:'Upload screenshots, annotate, and share with your team',
+    emptyTitle:'No projects yet', emptySub:'Click "New Project" to get started',
+    shared:'Shared', deleteConfirm:'Delete this project?',
+    modalTitle:'New Project',
+    modalSub:'Enter a project name. It will also appear on the shared link.',
+    labelName:'Project name', namePlaceholder:'e.g. APM Error Investigation',
+    cancel:'Cancel', createOpen:'Create & Open', creating:'Creating...',
+    errorOccurred:'An error occurred', loadFailed:'Failed to load projects',
+    justNow:'Just now', minsAgo:'m ago', hoursAgo:'h ago', daysAgo:'d ago',
+  },
+  ja: {
+    newProject:'新しいプロジェクト', pageTitle:'プロジェクト',
+    pageSub:'スクリーンショットをアップロードして、標注・共有できます',
+    emptyTitle:'プロジェクトがまだありません', emptySub:'右上の「新しいプロジェクト」から始めましょう',
+    shared:'共有済み', deleteConfirm:'このプロジェクトを削除しますか？',
+    modalTitle:'新しいプロジェクト',
+    modalSub:'プロジェクト名を入力してください。共有リンクにも表示されます。',
+    labelName:'プロジェクト名', namePlaceholder:'例：APM エラー調査 2024/01',
+    cancel:'キャンセル', createOpen:'作成して開く', creating:'作成中...',
+    errorOccurred:'エラーが発生しました', loadFailed:'読み込みに失敗しました',
+    justNow:'たった今', minsAgo:'分前', hoursAgo:'時間前', daysAgo:'日前',
+  },
+};
+
+let lang = localStorage.getItem('shareshot-lang') || 'en';
+function t(k) { return STRINGS[lang][k] || STRINGS.en[k] || k; }
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('.lang-option').forEach(o => o.classList.toggle('active', o.dataset.lang === lang));
+  document.documentElement.lang = lang === 'ja' ? 'ja' : 'en';
+  localStorage.setItem('shareshot-lang', lang);
+}
+
+const langBtn = document.getElementById('langBtn');
+const langDropdown = document.getElementById('langDropdown');
+langBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  langBtn.classList.toggle('open');
+  langDropdown.classList.toggle('open');
+});
+document.addEventListener('click', () => {
+  langBtn.classList.remove('open');
+  langDropdown.classList.remove('open');
+});
+document.querySelectorAll('.lang-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    lang = opt.dataset.lang;
+    langBtn.classList.remove('open');
+    langDropdown.classList.remove('open');
+    applyLang();
+    loadProjects();
+  });
+});
+
+async function loadProjects() {
+  try {
+    const projects = await fetch('/api/projects').then(r => r.json());
+    renderGrid(projects);
+  } catch(e) {
+    document.getElementById('grid').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">${t('loadFailed')}</div></div>`;
+  }
+}
+
+function renderGrid(projects) {
+  const grid = document.getElementById('grid');
+  if (projects.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <div class="empty-title">${t('emptyTitle')}</div>
+        <div class="empty-sub">${t('emptySub')}</div>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = projects.map(p => {
+    const thumb = p.sharedImageId
+      ? `<img src="/images/${p.sharedImageId}.png" alt="">`
+      : `<div class="card-thumb-placeholder">🖼️</div>`;
+    const date = relativeTime(p.updatedAt || p.createdAt);
+    return `
+      <a class="project-card" href="/canvas/${p.id}">
+        <div class="card-thumb">
+          ${thumb}
+          <div class="card-actions">
+            <button class="card-action-btn" data-delete="${p.id}">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor">
+                <path d="M4.5 1.5h4l.7.8H11v1H2v-1h1.8zM2.5 4.5h8l-.6 7H3.1zm2.5 1.5v4h1v-4zm2.5 0v4h1v-4z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">${escHtml(p.title)}</div>
+          <div class="card-meta">
+            <span>${date}</span>
+            ${p.sharedImageId ? `<span class="card-dot"></span><span>${t('shared')}</span>` : ''}
+          </div>
+        </div>
+      </a>`;
+  }).join('');
+
+  grid.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm(t('deleteConfirm'))) return;
+      await fetch(`/api/projects/${btn.dataset.delete}`, { method: 'DELETE' });
+      loadProjects();
+    });
+  });
+}
+
+document.getElementById('newBtn').addEventListener('click', openModal);
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('newModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+function openModal() {
+  document.getElementById('projName').value = '';
+  document.getElementById('newModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('projName').focus(), 60);
+}
+function closeModal() { document.getElementById('newModal').classList.add('hidden'); }
+
+document.getElementById('projName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('createBtn').click();
+  if (e.key === 'Escape') closeModal();
+});
+
+document.getElementById('createBtn').addEventListener('click', async () => {
+  const name = document.getElementById('projName').value.trim();
+  if (!name) { document.getElementById('projName').focus(); return; }
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true; btn.textContent = t('creating');
+  try {
+    const proj = await fetch('/api/projects', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: name }),
+    }).then(r => r.json());
+    location.href = `/canvas/${proj.id}`;
+  } catch(e) {
+    alert(t('errorOccurred'));
+    btn.disabled = false; btn.textContent = t('createOpen');
+  }
+});
+
+function relativeTime(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000), hours = Math.floor(diff / 3600000), days = Math.floor(diff / 86400000);
+  if (mins < 1) return t('justNow');
+  const sep = lang === 'ja' ? '' : ' ';
+  if (mins  < 60) return `${mins}${sep}${t('minsAgo')}`;
+  if (hours < 24) return `${hours}${sep}${t('hoursAgo')}`;
+  if (days  <  7) return `${days}${sep}${t('daysAgo')}`;
+  return new Date(iso).toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US');
+}
+function escHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+applyLang();
+loadProjects();
+</script>
+</body>
+</html>

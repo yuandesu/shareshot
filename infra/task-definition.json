@@ -1,0 +1,33 @@
+{
+  "family": "shareshot",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::659775407889:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::659775407889:role/shareshot-task-role",
+  "containerDefinitions": [
+    {
+      "name": "shareshot",
+      "image": "659775407889.dkr.ecr.us-east-1.amazonaws.com/shareshot:latest",
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 3000, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "NODE_ENV",    "value": "production" },
+        { "name": "AWS_REGION",  "value": "us-east-1" },
+        { "name": "S3_BUCKET",   "value": "shareshot-tse-sandbox" },
+        { "name": "PORT",        "value": "3000" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/shareshot",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
