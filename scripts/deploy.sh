@@ -39,6 +39,7 @@ step "Updating service..."
 aws ecs update-service \
   --cluster "${CLUSTER}" --service "${SERVICE}" \
   --task-definition "${REPO_NAME}:${NEW_REV}" \
+  --desired-count 1 \
   --force-new-deployment --region "${REGION}" --output json \
   | python3 -c "
 import sys, json

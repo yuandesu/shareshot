@@ -563,7 +563,7 @@ async function init() {
   applyLang();
 
   if (proj.canvasData?.objects?.length > 0) {
-    canvas.loadFromJSON(proj.canvasData, () => {
+    canvas.loadFromJSON(normalizeCanvasData(proj.canvasData), () => {
       canvas.renderAll();
       S.objCount = canvas.getObjects().length;
       updateHint();
@@ -806,12 +806,30 @@ function bindDropAndPaste() {
   });
 }
 
+// ── Canvas data normalization ──────────────────────────
+// Fabric.js stores image src as absolute URL. Normalize to relative path
+// so the data stays valid across domain/IP changes.
+function normalizeCanvasData(data) {
+  if (!data?.objects) return data;
+  return {
+    ...data,
+    objects: data.objects.map(obj => {
+      if (obj.type === 'image' && obj.src) {
+        try { obj = { ...obj, src: new URL(obj.src).pathname }; } catch {}
+      }
+      return obj;
+    }),
+  };
+}
+
 // ── Autosave ──────────────────────────────────────────
 let _saveTimer = null;
 function persistCanvas() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
-    const canvasData = canvas.toJSON(['selectable','evented','hoverCursor','__sp']);
+    const canvasData = normalizeCanvasData(
+      canvas.toJSON(['selectable','evented','hoverCursor','__sp'])
+    );
     const url = shareToken
       ? `/api/projects/${projectId}?token=${encodeURIComponent(shareToken)}`
       : `/api/projects/${projectId}`;
