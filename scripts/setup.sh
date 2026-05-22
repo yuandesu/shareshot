@@ -11,7 +11,6 @@ ok()   { echo -e "${G}✓${R} $*"; }
 info() { echo -e "${G}→${R} $*"; }
 warn() { echo -e "${Y}⚠${R}  $*"; }
 
-# Substitute placeholders in an infra file
 sub() {
   sed -e "s|@@ACCOUNT_ID@@|${ACCOUNT_ID}|g" \
       -e "s|@@REGION@@|${REGION}|g" \
@@ -61,24 +60,93 @@ aws ecs describe-clusters --clusters "${CLUSTER}" --region "${REGION}" \
   && warn "already exists" \
   || (aws ecs create-cluster --cluster-name "${CLUSTER}" --region "${REGION}" --output json >/dev/null && ok "created")
 
-# 6. Task definition
+# 6. Security groups
+info "Security groups"
+# ALB SG — allows HTTP from /32 CIDRs (sandbox blocks 0.0.0.0/0)
+aws ec2 describe-security-groups --filters "Name=group-name,Values=shareshot-alb-sg" \
+  --region "${REGION}" --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null | grep -q "sg-" \
+  && warn "ALB SG already exists" \
+  || (aws ec2 create-security-group \
+        --group-name "shareshot-alb-sg" --description "ShareShot ALB inbound" \
+        --vpc-id "${VPC_ID}" --region "${REGION}" --output json >/dev/null && ok "ALB SG created")
+# Task SG — allows port 3000 from ALB SG only (set up manually or update after ALB SG is known)
+aws ec2 describe-security-groups --filters "Name=group-name,Values=shareshot-sg" \
+  --region "${REGION}" --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null | grep -q "sg-" \
+  && warn "task SG already exists" \
+  || (aws ec2 create-security-group \
+        --group-name "shareshot-sg" --description "ShareShot task inbound from ALB" \
+        --vpc-id "${VPC_ID}" --region "${REGION}" --output json >/dev/null && ok "task SG created")
+
+# 7. ALB + Target Group + Listener
+info "ALB: ${ALB_NAME}"
+ALB_ARN=$(aws elbv2 describe-load-balancers --names "${ALB_NAME}" --region "${REGION}" \
+  --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null || true)
+if [[ -z "$ALB_ARN" || "$ALB_ARN" == "None" ]]; then
+  ALB_ARN=$(aws elbv2 create-load-balancer \
+    --name "${ALB_NAME}" \
+    --subnets $(echo "${SUBNET_IDS}" | tr ',' ' ') \
+    --security-groups "${ALB_SG}" \
+    --scheme internet-facing --type application \
+    --region "${REGION}" \
+    --query 'LoadBalancers[0].LoadBalancerArn' --output text)
+  ok "ALB created"
+else
+  warn "ALB already exists"
+fi
+
+TG_ARN=$(aws elbv2 describe-target-groups --names "${TG_NAME}" --region "${REGION}" \
+  --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null || true)
+if [[ -z "$TG_ARN" || "$TG_ARN" == "None" ]]; then
+  TG_ARN=$(aws elbv2 create-target-group \
+    --name "${TG_NAME}" --protocol HTTP --port 3000 \
+    --vpc-id "${VPC_ID}" --target-type ip \
+    --health-check-path / \
+    --health-check-interval-seconds 30 \
+    --healthy-threshold-count 2 --unhealthy-threshold-count 3 \
+    --region "${REGION}" \
+    --query 'TargetGroups[0].TargetGroupArn' --output text)
+  aws elbv2 create-listener \
+    --load-balancer-arn "${ALB_ARN}" \
+    --protocol HTTP --port 80 \
+    --default-actions "Type=forward,TargetGroupArn=${TG_ARN}" \
+    --region "${REGION}" --output json >/dev/null
+  ok "target group + listener created"
+else
+  warn "target group already exists"
+fi
+
+ALB_DNS=$(aws elbv2 describe-load-balancers --load-balancer-arns "${ALB_ARN}" \
+  --region "${REGION}" --query 'LoadBalancers[0].DNSName' --output text)
+
+# 8. Task definition
 info "Task definition: ${REPO_NAME}"
 aws ecs register-task-definition \
   --cli-input-json "$(sub < "${DIR}/../infra/task-definition.json")" \
   --region "${REGION}" --output json >/dev/null
 ok "registered"
 
-# 7. ECS service
+# 9. ECS service (with ALB)
 info "ECS service: ${SERVICE}"
-aws ecs describe-services --cluster "${CLUSTER}" --services "${SERVICE}" --region "${REGION}" \
-  --query "services[?status=='ACTIVE'].serviceName" --output text | grep -q "${SERVICE}" \
-  && warn "already exists" \
-  || (aws ecs create-service \
-        --cluster "${CLUSTER}" --service-name "${SERVICE}" \
-        --task-definition "${REPO_NAME}" --desired-count 1 --launch-type FARGATE \
-        --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_IDS}],securityGroups=[${SECURITY_GROUP_ID}],assignPublicIp=ENABLED}" \
-        --region "${REGION}" --output json >/dev/null \
-      && ok "created")
+SVC_STATUS=$(aws ecs describe-services --cluster "${CLUSTER}" --services "${SERVICE}" \
+  --region "${REGION}" --query 'services[0].status' --output text 2>/dev/null || echo "MISSING")
+if [[ "$SVC_STATUS" == "ACTIVE" ]]; then
+  warn "already exists"
+else
+  aws ecs create-service \
+    --cluster "${CLUSTER}" --service-name "${SERVICE}" \
+    --task-definition "${REPO_NAME}" --desired-count 1 --launch-type FARGATE \
+    --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_IDS}],securityGroups=[${TASK_SG}],assignPublicIp=ENABLED}" \
+    --load-balancers "targetGroupArn=${TG_ARN},containerName=${REPO_NAME},containerPort=3000" \
+    --health-check-grace-period-seconds 30 \
+    --region "${REGION}" --output json >/dev/null
+  ok "created"
+fi
 
 echo ""
-echo -e "${G}Infrastructure ready.${R} Now run: ./scripts/deploy.sh"
+echo -e "${G}Infrastructure ready.${R}"
+echo "  URL: http://${ALB_DNS}"
+echo ""
+echo "Add your IP to the ALB SG (sandbox blocks 0.0.0.0/0):"
+echo "  aws ec2 authorize-security-group-ingress --group-id ${ALB_SG} --protocol tcp --port 80 --cidr \$(curl -s https://checkip.amazonaws.com)/32 --region ${REGION}"
+echo ""
+echo "Then run: ./scripts/deploy.sh"

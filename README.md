@@ -7,7 +7,7 @@ No login required — access is controlled by share tokens.
 ## Stack
 
 - Node.js (no framework) + Fabric.js canvas
-- AWS S3 for storage, ECS Fargate for compute
+- AWS S3 for storage, ECS Fargate + ALB for compute
 - Single dependency: `@aws-sdk/client-s3`
 
 ## Run locally
@@ -25,27 +25,22 @@ Needs AWS credentials with S3 read/write access.
 Edit `scripts/config.sh` with your account details, then:
 
 ```bash
-./scripts/setup.sh    # one-time: provision S3, ECR, IAM, ECS
+./scripts/setup.sh    # one-time: provision S3, ECR, IAM, ALB, ECS
 ./scripts/deploy.sh   # build → push → redeploy (run this on every update)
 ```
 
 Requires AWS CLI, Docker with buildx. On Apple Silicon: `colima start` first.
 
-## Sandbox note
+## Access
 
-The tse-sandbox blocks `0.0.0.0/0` SG rules. To give someone access, add their IP:
+The app runs behind an ALB with a stable DNS name:
+**http://shareshot-2000439380.us-east-1.elb.amazonaws.com**
+
+The tse-sandbox blocks `0.0.0.0/0` SG rules. To give someone access, add their IP to the ALB SG:
 
 ```bash
 aws ec2 authorize-security-group-ingress \
-  --group-id sg-0f3b0a2b192d9fcf5 --protocol tcp --port 3000 \
+  --group-id sg-01b4bd0a407ed0fd1 --protocol tcp --port 80 \
   --cidr <ip>/32 --region us-east-1
 # find your IP: curl checkip.amazonaws.com
-```
-
-The public IP changes on every task restart. To get the current one:
-
-```bash
-TASK=$(aws ecs list-tasks --cluster dd-fargate-test --service-name shareshot --region us-east-1 --query 'taskArns[0]' --output text)
-ENI=$(aws ecs describe-tasks --cluster dd-fargate-test --tasks $TASK --region us-east-1 --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text)
-aws ec2 describe-network-interfaces --network-interface-ids $ENI --region us-east-1 --query 'NetworkInterfaces[0].Association.PublicIp' --output text
 ```

@@ -11,6 +11,12 @@ LOG_GROUP="/ecs/shareshot"
 CLUSTER="dd-fargate-test"
 SERVICE="shareshot"
 
-# Network (used by setup.sh when creating the ECS service)
+# Network
+VPC_ID="vpc-0d99ca93852ace853"
 SUBNET_IDS="subnet-0b620703db142d0e2,subnet-038be5070eca57f27"
-SECURITY_GROUP_ID="sg-0f3b0a2b192d9fcf5"
+TASK_SG="sg-0f3b0a2b192d9fcf5"   # allows port 3000 from ALB SG only
+ALB_SG="sg-01b4bd0a407ed0fd1"    # allows port 80 from /32 CIDRs (sandbox blocks 0.0.0.0/0)
+
+# ALB (created by setup.sh)
+ALB_NAME="shareshot"
+TG_NAME="shareshot"

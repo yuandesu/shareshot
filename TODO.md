@@ -2,9 +2,9 @@
 
 ## Infrastructure
 
-- [ ] **Fixed URL** — add an ALB (Application Load Balancer) or Route53 record so the app has a stable URL instead of a dynamic ECS public IP that changes on every task restart
-- [ ] **HTTPS** — TLS termination at ALB with ACM certificate; currently plain HTTP on port 3000
-- [ ] **Team access automation** — tse-sandbox blocks `0.0.0.0/0` SG rules; automate per-member `/32` IP allowlisting or switch to VPN/internal-only routing
+- [x] **Fixed URL** — ALB in place, DNS: `shareshot-2000439380.us-east-1.elb.amazonaws.com`
+- [ ] **HTTPS** — TLS termination at ALB with ACM certificate; currently plain HTTP on port 80
+- [ ] **Team access automation** — tse-sandbox blocks `0.0.0.0/0` SG rules; each member still needs a manual `/32` rule on the ALB SG (`sg-01b4bd0a407ed0fd1`)
 
 ## Auth
 
