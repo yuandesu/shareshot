@@ -3,7 +3,7 @@
 ## Infrastructure
 
 - [x] **Fixed URL** — ALB in place, DNS: `shareshot-2000439380.us-east-1.elb.amazonaws.com`
-- [ ] **HTTPS** — TLS termination at ALB with ACM certificate; currently plain HTTP on port 80
+- [x] **HTTPS** — CloudFront distribution in front of ALB; HTTP auto-redirects to HTTPS, no custom domain needed
 - [ ] **Team access automation** — tse-sandbox blocks `0.0.0.0/0` SG rules; each member still needs a manual `/32` rule on the ALB SG (`sg-01b4bd0a407ed0fd1`)
 
 ## Auth
@@ -22,5 +22,5 @@
 ## Polish
 
 - [ ] **Mobile view** — canvas toolbar and layout are not optimised for small screens
-- [ ] **Project thumbnail** — show a small preview image on the home page cards instead of just a title
+- [x] **Project thumbnail** — already implemented; shows shared image on card, placeholder when none
 - [ ] **Share link expiry** — optionally set an expiry date on viewer/commenter/editor tokens

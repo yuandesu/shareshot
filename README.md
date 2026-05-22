@@ -7,7 +7,7 @@ No login required — access is controlled by share tokens.
 ## Stack
 
 - Node.js (no framework) + Fabric.js canvas
-- AWS S3 for storage, ECS Fargate + ALB for compute
+- AWS S3 for storage, ECS Fargate + ALB + CloudFront for compute/delivery
 - Single dependency: `@aws-sdk/client-s3`
 
 ## Run locally
@@ -33,8 +33,7 @@ Requires AWS CLI, Docker with buildx. On Apple Silicon: `colima start` first.
 
 ## Access
 
-The app runs behind an ALB with a stable DNS name:
-**http://shareshot-2000439380.us-east-1.elb.amazonaws.com**
+**https://ds198j48umtb7.cloudfront.net** (HTTPS, auto-redirects from HTTP)
 
 The tse-sandbox blocks `0.0.0.0/0` SG rules. To give someone access, add their IP to the ALB SG:
 

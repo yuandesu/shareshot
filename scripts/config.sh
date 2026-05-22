@@ -20,3 +20,7 @@ ALB_SG="sg-01b4bd0a407ed0fd1"    # allows port 80 from /32 CIDRs (sandbox blocks
 # ALB (created by setup.sh)
 ALB_NAME="shareshot"
 TG_NAME="shareshot"
+
+# CloudFront
+CF_DISTRIBUTION_ID="E3BNIPEBKS3A01"
+CF_DOMAIN="ds198j48umtb7.cloudfront.net"
