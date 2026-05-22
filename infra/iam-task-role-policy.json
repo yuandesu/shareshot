@@ -4,18 +4,14 @@
     {
       "Sid": "S3ObjectAccess",
       "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject",
-        "s3:DeleteObject"
-      ],
-      "Resource": "arn:aws:s3:::shareshot-tse-sandbox/*"
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::@@S3_BUCKET@@/*"
     },
     {
       "Sid": "S3ListAccess",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
-      "Resource": "arn:aws:s3:::shareshot-tse-sandbox"
+      "Resource": "arn:aws:s3:::@@S3_BUCKET@@"
     }
   ]
 }

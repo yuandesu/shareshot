@@ -4,27 +4,27 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "arn:aws:iam::659775407889:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::659775407889:role/shareshot-task-role",
+  "executionRoleArn": "arn:aws:iam::@@ACCOUNT_ID@@:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::@@ACCOUNT_ID@@:role/@@TASK_ROLE@@",
   "containerDefinitions": [
     {
       "name": "shareshot",
-      "image": "659775407889.dkr.ecr.us-east-1.amazonaws.com/shareshot:latest",
+      "image": "@@ACCOUNT_ID@@.dkr.ecr.@@REGION@@.amazonaws.com/@@REPO_NAME@@:latest",
       "essential": true,
       "portMappings": [
         { "containerPort": 3000, "protocol": "tcp" }
       ],
       "environment": [
-        { "name": "NODE_ENV",    "value": "production" },
-        { "name": "AWS_REGION",  "value": "us-east-1" },
-        { "name": "S3_BUCKET",   "value": "shareshot-tse-sandbox" },
-        { "name": "PORT",        "value": "3000" }
+        { "name": "NODE_ENV",   "value": "production" },
+        { "name": "AWS_REGION", "value": "@@REGION@@" },
+        { "name": "S3_BUCKET",  "value": "@@S3_BUCKET@@" },
+        { "name": "PORT",       "value": "3000" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/shareshot",
-          "awslogs-region": "us-east-1",
+          "awslogs-group":         "@@LOG_GROUP@@",
+          "awslogs-region":        "@@REGION@@",
           "awslogs-stream-prefix": "ecs"
         }
       }
