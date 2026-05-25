@@ -225,6 +225,13 @@ body {
     </svg>
     Undo
   </button>
+  <button class="tb-btn btn-danger" id="clearBtn" data-tip="Clear all">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1,3 12,3"/><path d="M10.5 3v8.5a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1V3"/>
+      <line x1="5" y1="6" x2="5" y2="10"/><line x1="8" y1="6" x2="8" y2="10"/>
+      <path d="M4.5 3V2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/>
+    </svg>
+  </button>
   <button class="tb-btn btn-danger" id="deleteBtn" data-tip="Delete (Del)">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor">
       <path d="M4.5 1.5h4l.7.8H11v1H2v-1h1.8zM2.5 4.5h8l-.6 7H3.1zm2.5 1.5v4h1v-4zm2.5 0v4h1v-4z"/>
@@ -315,6 +322,7 @@ const STRINGS = {
     hintSub:'Drag & drop · Ctrl+V paste · bottom-left button',
     dropMsg:'Drop to add',
     emptyAlert:'Nothing on the canvas to download.',
+    clearConfirm:'Clear the entire canvas?',
     defaultText:'Text',
     thin:'Thin', medium:'Med', thick:'Thick',
   },
@@ -324,6 +332,7 @@ const STRINGS = {
     hintSub:'ドラッグ＆ドロップ · Ctrl+V ペースト · 左下ボタン',
     dropMsg:'ドロップして追加',
     emptyAlert:'キャンバスに何もありません。',
+    clearConfirm:'キャンバスをすべて削除しますか？',
     defaultText:'テキスト',
     thin:'細', medium:'中', thick:'太',
   },
@@ -678,6 +687,12 @@ function bindToolbar() {
   }));
   document.getElementById('strokeSize').addEventListener('change', e => { S.strokeW = parseInt(e.target.value); if (S.tool === 'draw') updateBrush(); });
   document.getElementById('undoBtn').addEventListener('click', undo);
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (canvas.getObjects().length === 0) return;
+    if (!confirm(t('clearConfirm'))) return;
+    canvas.clear(); S.objCount = 0; updateHint(); saveHistory();
+    localStorage.removeItem('shareshot-canvas');
+  });
   document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
   document.getElementById('zoomInBtn').addEventListener('click', () => zoomBy(1.25));
   document.getElementById('zoomOutBtn').addEventListener('click', () => zoomBy(0.8));
