@@ -8,7 +8,7 @@ No server. Runs entirely in the browser — canvas state is saved to localStorag
 
 **https://yuandesu.github.io/shareshot**
 
-Or open `public/index.html` locally in any browser.
+Or open `docs/index.html` locally in any browser.
 
 ## Stack
 
