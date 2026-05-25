@@ -232,11 +232,6 @@ body {
       <path d="M4.5 3V2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/>
     </svg>
   </button>
-  <button class="tb-btn btn-danger" id="deleteBtn" data-tip="Delete (Del)">
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor">
-      <path d="M4.5 1.5h4l.7.8H11v1H2v-1h1.8zM2.5 4.5h8l-.6 7H3.1zm2.5 1.5v4h1v-4zm2.5 0v4h1v-4z"/>
-    </svg>
-  </button>
 
   <div class="tb-sep"></div>
 
@@ -393,9 +388,11 @@ function init() {
         canvas.renderAll();
         S.objCount = canvas.getObjects().length;
         updateHint();
-        document.getElementById('undoBtn').disabled = true;
+        snapshotHistory();
       });
-    } catch {}
+    } catch { snapshotHistory(); }
+  } else {
+    snapshotHistory();
   }
 
   window.addEventListener('resize', () => {
@@ -516,7 +513,20 @@ function bindCanvasEvents() {
   });
 
   canvas.on('object:removed', () => { S.objCount = canvas.getObjects().length; updateHint(); });
-  canvas.on('path:created', () => { saveHistory(); S.objCount++; updateHint(); });
+  canvas.on('path:created', e => {
+    const p = e.path;
+    if (p.width < 4 && p.height < 4) {
+      const cx = p.left + p.width / 2, cy = p.top + p.height / 2;
+      canvas.remove(p);
+      const dot = new fabric.Circle({
+        left: cx, top: cy, radius: Math.max(3, S.strokeW + 1),
+        fill: S.color, originX: 'center', originY: 'center',
+        selectable: true, evented: true, hoverCursor: 'move',
+      });
+      canvas.add(dot); canvas.setActiveObject(dot);
+    }
+    saveHistory(); S.objCount++; updateHint();
+  });
   canvas.on('object:modified', () => { saveHistory(); });
 }
 
@@ -618,6 +628,13 @@ function bindDropAndPaste() {
   });
 }
 
+// ── History snapshot ──────────────────────────────────
+function snapshotHistory() {
+  const snap = JSON.stringify(canvas.toJSON(['selectable','evented','hoverCursor','__sp']));
+  S.history = [snap]; S.histIdx = 0;
+  document.getElementById('undoBtn').disabled = true;
+}
+
 // ── Autosave to localStorage ──────────────────────────
 let _saveTimer = null;
 function persistCanvas() {
@@ -693,7 +710,6 @@ function bindToolbar() {
     canvas.clear(); S.objCount = 0; updateHint(); saveHistory();
     localStorage.removeItem('shareshot-canvas');
   });
-  document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
   document.getElementById('zoomInBtn').addEventListener('click', () => zoomBy(1.25));
   document.getElementById('zoomOutBtn').addEventListener('click', () => zoomBy(0.8));
   document.getElementById('zoomDisplay').addEventListener('click', resetZoom);
